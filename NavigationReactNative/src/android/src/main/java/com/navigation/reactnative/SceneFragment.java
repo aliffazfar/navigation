@@ -182,7 +182,13 @@ public class SceneFragment extends Fragment {
     }
 
     public static class SceneFragmentView extends LinearLayout {
-        private boolean listening = false;
+        private final OnLayoutChangeListener onLayoutChangeListener = (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            ViewGroup stack = (ViewGroup) getParent();
+            measure(
+                MeasureSpec.makeMeasureSpec(stack.getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(stack.getHeight(), MeasureSpec.EXACTLY));
+            layout(0, 0, stack.getWidth(), stack.getHeight());
+        };
 
         public SceneFragmentView(Context context) {
             super(context);
@@ -191,17 +197,13 @@ public class SceneFragment extends Fragment {
         @Override
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
-            if (!listening) {
-                ((ViewGroup) getParent()).addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-                    if (getParent() instanceof ViewGroup stack) {
-                        measure(
-                            MeasureSpec.makeMeasureSpec(stack.getWidth(), MeasureSpec.EXACTLY),
-                            MeasureSpec.makeMeasureSpec(stack.getHeight(), MeasureSpec.EXACTLY));
-                        layout(0, 0, stack.getWidth(), stack.getHeight());
-                    }
-                });
-                listening = true;
-            }
+            ((ViewGroup) getParent()).addOnLayoutChangeListener(onLayoutChangeListener);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            ((ViewGroup) getParent()).removeOnLayoutChangeListener(onLayoutChangeListener);
         }
     }
 }
