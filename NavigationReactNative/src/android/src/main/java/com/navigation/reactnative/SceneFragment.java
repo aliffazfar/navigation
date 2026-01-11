@@ -193,11 +193,12 @@ public class SceneFragment extends Fragment {
             super.onAttachedToWindow();
             if (!listening) {
                 ((ViewGroup) getParent()).addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-                    if (getParent() == null) return;
-                    measure(
-                        MeasureSpec.makeMeasureSpec(((ViewGroup) getParent()).getWidth(), MeasureSpec.EXACTLY),
-                        MeasureSpec.makeMeasureSpec(((ViewGroup) getParent()).getHeight(), MeasureSpec.EXACTLY));
-                    layout(0, 0, ((ViewGroup) getParent()).getWidth(), ((ViewGroup) getParent()).getHeight());
+                    if (getParent() instanceof ViewGroup stack) {
+                        measure(
+                            MeasureSpec.makeMeasureSpec(stack.getWidth(), MeasureSpec.EXACTLY),
+                            MeasureSpec.makeMeasureSpec(stack.getHeight(), MeasureSpec.EXACTLY));
+                        layout(0, 0, stack.getWidth(), stack.getHeight());
+                    }
                 });
                 listening = true;
             }
