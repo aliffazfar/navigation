@@ -182,7 +182,7 @@ public class SceneFragment extends Fragment {
     }
 
     public static class SceneFragmentView extends LinearLayout {
-        private boolean layoutRequested = false;
+        private boolean listening = false;
 
         public SceneFragmentView(Context context) {
             super(context);
@@ -191,24 +191,16 @@ public class SceneFragment extends Fragment {
         @Override
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
-            measureAndLayout.run();
-        }
-
-        @Override
-        public void requestLayout() {
-            super.requestLayout();
-            if (!layoutRequested) {
-                layoutRequested = true;
-                post(measureAndLayout);
+            if (!listening) {
+                ((ViewGroup) getParent()).addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    if (getParent() == null) return;
+                    measure(
+                        MeasureSpec.makeMeasureSpec(((ViewGroup) getParent()).getWidth(), MeasureSpec.EXACTLY),
+                        MeasureSpec.makeMeasureSpec(((ViewGroup) getParent()).getHeight(), MeasureSpec.EXACTLY));
+                    layout(0, 0, ((ViewGroup) getParent()).getWidth(), ((ViewGroup) getParent()).getHeight());
+                });
+                listening = true;
             }
         }
-
-        private final Runnable measureAndLayout = () -> {
-            layoutRequested = false;
-            measure(
-                MeasureSpec.makeMeasureSpec(((ViewGroup) getParent()).getWidth(), MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(((ViewGroup) getParent()).getHeight(), MeasureSpec.EXACTLY));
-            layout(((ViewGroup) getParent()).getLeft(), ((ViewGroup) getParent()).getTop(), ((ViewGroup) getParent()).getRight(), ((ViewGroup) getParent()).getBottom());
-        };
     }
 }
