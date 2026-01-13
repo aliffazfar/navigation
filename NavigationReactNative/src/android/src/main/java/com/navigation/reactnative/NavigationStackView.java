@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.SharedElementCallback;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentContainerView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
@@ -67,9 +68,24 @@ public class NavigationStackView extends ViewGroup implements LifecycleEventList
     int mostRecentEventCount;
     private boolean layoutRequested = false;
     private boolean predictiveSharedElements = false;
+    private final FragmentContainerView fragmentContainerView;
 
     public NavigationStackView(Context context) {
         super(context);
+        fragmentContainerView = new FragmentContainerView(context);
+        addView(fragmentContainerView);
+        addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            fragmentContainerView.measure(
+                MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
+            fragmentContainerView.layout(0, 0, getWidth(), getHeight());
+        });
+    }
+
+    @Override
+    public void setId(int id) {
+        super.setId(id);
+        fragmentContainerView.setId(id);
     }
 
     @SuppressLint("PrivateResource")
@@ -218,7 +234,7 @@ public class NavigationStackView extends ViewGroup implements LifecycleEventList
                         predictiveSharedElements = false;
                     }
                 });
-                fragmentTransaction.replace(getId(), fragment, key);
+                fragmentTransaction.replace(fragmentContainerView.getId(), fragment, key);
                 if (nextCrumb > 0) {
                     fragmentTransaction.addToBackStack(String.valueOf(nextCrumb));
                     fragmentTransaction.commit();
@@ -267,7 +283,7 @@ public class NavigationStackView extends ViewGroup implements LifecycleEventList
                     predictiveSharedElements = false;
                 }
             });
-            fragmentTransaction.replace(getId(), fragment, key);
+            fragmentTransaction.replace(fragmentContainerView.getId(), fragment, key);
             if (crumb > 0) {
                 fragmentManager.popBackStack();
                 fragmentTransaction.addToBackStack(String.valueOf(crumb));
@@ -498,7 +514,7 @@ public class NavigationStackView extends ViewGroup implements LifecycleEventList
         @Nullable
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            return stack != null ? stack : new View(getContext());
+            return stack != null ? stack.fragmentContainerView : new View(getContext());
         }
     }
 
