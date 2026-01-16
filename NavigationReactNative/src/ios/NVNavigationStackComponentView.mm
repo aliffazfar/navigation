@@ -117,7 +117,8 @@ using namespace facebook::react;
             _navigationController.interactivePopGestureRecognizer.delegate = self;
             [_navigationController.view addGestureRecognizer:_interactiveGestureRecognizer];
             if (@available(iOS 26.0, *)) {
-                _navigationController.interactiveContentPopGestureRecognizer.delegate = self;
+                UIGestureRecognizer *contentGesture = [_navigationController valueForKey:@"interactiveContentPopGestureRecognizer"];
+                contentGesture.delegate = self;
                 [_navigationController.view addGestureRecognizer:_interactiveContentGestureRecognizer];
             }
         }
@@ -128,8 +129,10 @@ using namespace facebook::react;
             [_navigationController.view removeGestureRecognizer:_interactiveGestureRecognizer];
             [_navigationController.view removeGestureRecognizer:_interactiveContentGestureRecognizer];
             _navigationController.interactivePopGestureRecognizer.delegate = _interactiveGestureRecognizerDelegate;
-            if (@available(iOS 26.0, *))
-                _navigationController.interactiveContentPopGestureRecognizer.delegate = _interactiveGestureRecognizerDelegate;
+            if (@available(iOS 26.0, *)) {
+                UIGestureRecognizer *contentGesture = [_navigationController valueForKey:@"interactiveContentPopGestureRecognizer"];
+                contentGesture.delegate = _interactiveGestureRecognizerDelegate;
+            }
         }
     }
     _navigationController.view.backgroundColor = RCTUIColorFromSharedColor(newViewProps.underlayColor);
@@ -189,9 +192,10 @@ using namespace facebook::react;
                 prevSceneController = (NVSceneController *) _navigationController.topViewController;
             if (crumb - currentCrumb == 1 && [self sharedElementView:prevSceneController]) {
                 if (@available(iOS 18.0, *)) {
-                    [controller setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^(UIZoomTransitionSourceViewProviderContext *context) {
+                    SEL selector = NSSelectorFromString(@"zoomWithOptions:sourceViewProvider:");
+                    [controller setValue:[(id)NSClassFromString(@"UIViewControllerTransition") performSelector:selector withObject:nil withObject:^id (id context) {
                         return [self sharedElementView:prevSceneController];
-                    }]];
+                    }] forKey:@"preferredTransition"];
                 }
             }
             prevSceneController.exitTrans = _exitTransitions;
@@ -373,7 +377,8 @@ using namespace facebook::react;
         }
     }
     if (@available(iOS 26.0, *)) {
-        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer || gestureRecognizer == _navigationController.interactiveContentPopGestureRecognizer;
+        UIGestureRecognizer *systemContentGesture = [_navigationController valueForKey:@"interactiveContentPopGestureRecognizer"];
+        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer || gestureRecognizer == systemContentGesture;
     } else {
         return gestureRecognizer == _navigationController.interactivePopGestureRecognizer;
     }
