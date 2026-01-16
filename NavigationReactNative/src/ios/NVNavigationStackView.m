@@ -97,9 +97,8 @@
             [_navigationController.view removeGestureRecognizer:_interactiveContentGestureRecognizer];
             _navigationController.interactivePopGestureRecognizer.delegate = _interactiveGestureRecognizerDelegate;
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
-            if (@available(iOS 26.0, *)) {
+            if (@available(iOS 26.0, *))
                 _navigationController.interactiveContentPopGestureRecognizer.delegate = _interactiveGestureRecognizerDelegate;
-            }
 #endif
         }
     }
@@ -404,8 +403,7 @@
     }
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
     if (@available(iOS 26.0, *)) {
-        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer ||
-               gestureRecognizer == _navigationController.interactiveContentPopGestureRecognizer;
+        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer || gestureRecognizer == _navigationController.interactiveContentPopGestureRecognizer;
     }
 #endif
     return gestureRecognizer == _navigationController.interactivePopGestureRecognizer;
