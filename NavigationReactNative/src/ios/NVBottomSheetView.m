@@ -202,11 +202,13 @@ API_AVAILABLE(ios(15.0)){
         _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(resizeView)];
         [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
         if ([self sharedElementView]) {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 180000
             if (@available(iOS 18.0, *)) {
                 [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^(UIZoomTransitionSourceViewProviderContext *context) {
                     return [self sharedElementView];
                 }]];
             }
+#endif
         }
         [[self reactViewController] presentViewController:_bottomSheetController animated:true completion:nil];
     }

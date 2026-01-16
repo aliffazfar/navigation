@@ -217,7 +217,7 @@ API_AVAILABLE(ios(15.0)){
             if ([sharedElementView isKindOfClass:[NVBarButtonComponentView class]]) {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
                 if (@available(iOS 26.0, *)) {
-                    [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceBarButtonItemProvider:^id (UIZoomTransitionSourceViewProviderContext *context) {
+                    [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceBarButtonItemProvider:^(UIZoomTransitionSourceViewProviderContext *context) {
                         return ((NVBarButtonComponentView *) sharedElementView).button;
                     }]];
                 }
@@ -225,7 +225,7 @@ API_AVAILABLE(ios(15.0)){
             } else {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 180000
                 if (@available(iOS 18.0, *)) {
-                    [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^id (UIZoomTransitionSourceViewProviderContext *context) {
+                    [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^(UIZoomTransitionSourceViewProviderContext *context) {
                         return sharedElementView;
                     }]];
                 }

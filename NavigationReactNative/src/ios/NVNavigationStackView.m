@@ -214,7 +214,7 @@
             if (crumb - currentCrumb == 1 && [self sharedElementView:prevSceneController]) {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 180000
                 if (@available(iOS 18.0, *)) {
-                    [controller setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^id (UIZoomTransitionSourceViewProviderContext *context) {
+                    [controller setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^(UIZoomTransitionSourceViewProviderContext *context) {
                         return [self sharedElementView:prevSceneController];
                     }]];
                 }
