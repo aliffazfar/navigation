@@ -1,24 +1,31 @@
 package com.navigation.reactnative;
 
 import android.animation.Animator;
-import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Lifecycle;
 import androidx.transition.Transition;
-import androidx.transition.TransitionListenerAdapter;
 
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
+import com.google.android.material.transition.Hold;
+import com.google.android.material.transition.MaterialElevationScale;
+import com.google.android.material.transition.MaterialFade;
+import com.google.android.material.transition.MaterialFadeThrough;
+import com.google.android.material.transition.MaterialSharedAxis;
+
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SceneFragment extends Fragment {
@@ -43,82 +50,25 @@ public class SceneFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if (scene != null) {
-            if (scene.getParent() != null)
-                ((ViewGroup) scene.getParent()).endViewTransition(scene);
+            SceneFragmentView fragmentView = new SceneFragmentView(getContext());
+            if (scene.getParent() != null) {
+                ((ViewGroup) scene.getParent()).removeView(scene);
+            }
+            fragmentView.addView(scene);
             if (scene.sharedElementMotion != null)
                 postponeEnterTransition(300, TimeUnit.MILLISECONDS);
-            return scene;
+            return fragmentView;
         }
         return new View(getContext());
     }
 
     @Nullable
     @Override
-    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
-        if (nextAnim != 0 && enter) {
-            Animation anim;
-            try {
-                anim = AnimationUtils.loadAnimation(getContext(), nextAnim);
-            } catch(RuntimeException e) {
-                return null;
-            }
-            anim.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    if (scene.getParent() instanceof NavigationStackView)
-                        ((NavigationStackView) scene.getParent()).onRest(scene.crumb);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-                }
-            });
-            return anim;
-        }
-        return super.onCreateAnimation(transit, enter, nextAnim);
-    }
-
-    @Nullable
-    @Override
     public Animator onCreateAnimator(int transit, boolean enter, int nextAnim) {
-        if ((nextAnim != 0 || enterAnimator != null) && enter) {
-            Animator anim;
-            try {
-                anim = nextAnim == 0 ? transform(enterAnimator, true) : (nextAnim == -1 ? transform(reenterAnimator, true) : AnimatorInflater.loadAnimator(getContext(), nextAnim));
-            } catch(RuntimeException e) {
-                return null;
-            }
-            assert anim != null;
-            anim.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(@NonNull Animator animator) {
-                }
-
-                @Override
-                public void onAnimationEnd(@NonNull Animator animator) {
-                    if (scene.getParent() instanceof NavigationStackView)
-                        ((NavigationStackView) scene.getParent()).onRest(scene.crumb);
-                }
-
-                @Override
-                public void onAnimationCancel(@NonNull Animator animator) {
-                }
-
-                @Override
-                public void onAnimationRepeat(@NonNull Animator animator) {
-                }
-            });
-            return anim;
-        }
-        if ((nextAnim == 0 && enterAnimator == null) && enter && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
-            ((NavigationStackView) scene.getParent()).onRest(scene.crumb);
-        }
+        if (nextAnim == 0 && enterAnimator != null && enter) return transform(enterAnimator, true);
+        if (nextAnim == -1 && reenterAnimator != null && enter) return transform(reenterAnimator, true);
         if (nextAnim == 0 && exitAnimator != null && !enter) return transform(exitAnimator, false);
-        if (nextAnim == -1 && returnAnimator != null) return transform(returnAnimator, false);
+        if (nextAnim == -1 && returnAnimator != null && !enter) return transform(returnAnimator, false);
         return super.onCreateAnimator(transit, enter, nextAnim);
     }
 
@@ -174,54 +124,86 @@ public class SceneFragment extends Fragment {
 
     @Override
     public void setEnterTransition(@Nullable Object transition) {
+        transition = getTransition((ReadableMap) transition);
         super.setEnterTransition(transition);
-        if (transition == null) return;
-        ((Transition) transition).addListener(new TransitionListenerAdapter(){
-            @Override
-            public void onTransitionEnd(@NonNull Transition transition) {
-                super.onTransitionEnd(transition);
-                if (scene.getParent() instanceof NavigationStackView && isVisible())
-                    ((NavigationStackView) scene.getParent()).onRest(scene.crumb);
-            }
-        });
+    }
+
+    @Override
+    public void setExitTransition(@Nullable Object transition) {
+        transition = getTransition((ReadableMap) transition);
+        super.setExitTransition(transition);
     }
 
     @Override
     public void setReenterTransition(@Nullable Object transition) {
+        transition = getTransition((ReadableMap) transition);
         super.setReenterTransition(transition);
-        if (transition == null) return;
-        ((Transition) transition).addListener(new TransitionListenerAdapter(){
-            @Override
-            public void onTransitionEnd(@NonNull Transition transition) {
-                super.onTransitionEnd(transition);
-                if (scene.getParent() instanceof NavigationStackView && isVisible())
-                    ((NavigationStackView) scene.getParent()).onRest(scene.crumb);
-            }
-        });
     }
 
     @Override
     public void setReturnTransition(@Nullable Object transition) {
+        transition = getTransition((ReadableMap) transition);
         super.setReturnTransition(transition);
-        if (transition == null) return;
-        ((Transition) transition).addListener(new TransitionListenerAdapter(){
-            @Override
-            public void onTransitionEnd(@NonNull Transition transition) {
-                super.onTransitionEnd(transition);
-                if (scene != null && !isVisible())
-                  scene.popped();
+    }
+
+    private Transition getTransition(ReadableMap trans) {
+        Transition transition = null;
+        if (trans == null) return null;
+        ReadableArray items = trans.hasKey("items") ? trans.getArray("items") : null;
+        if (items == null || items.size() == 0) return null;
+        trans = items.getMap(0);
+        String transType = trans != null ? trans.getString("type") : null;
+        if (transType == null) return null;
+        switch (transType) {
+            case "sharedAxis" -> {
+                Map<String, Integer> axisMap = new HashMap<>();
+                axisMap.put("x", MaterialSharedAxis.X);
+                axisMap.put("y", MaterialSharedAxis.Y);
+                Integer axis = axisMap.get(trans.getString("axis"));
+                transition = new MaterialSharedAxis(axis != null ? axis : MaterialSharedAxis.Z, true);
             }
-        });
+            case "elevationScale" -> transition = new MaterialElevationScale(true);
+            case "fade" -> transition = new MaterialFade();
+            case "fadeThrough" -> transition = new MaterialFadeThrough();
+            case "hold" -> transition = new Hold();
+        }
+        return transition;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (getReturnTransition() == null && scene != null)
+        if (scene != null)
             scene.popped();
     }
 
     public SceneView getScene() {
         return scene;
+    }
+
+    public static class SceneFragmentView extends LinearLayout {
+        private final OnLayoutChangeListener onLayoutChangeListener = (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            ViewGroup stack = (ViewGroup) getParent();
+            measure(
+                MeasureSpec.makeMeasureSpec(stack.getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(stack.getHeight(), MeasureSpec.EXACTLY));
+            layout(0, 0, stack.getWidth(), stack.getHeight());
+        };
+
+        public SceneFragmentView(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            ((ViewGroup) getParent()).addOnLayoutChangeListener(onLayoutChangeListener);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            ((ViewGroup) getParent()).removeOnLayoutChangeListener(onLayoutChangeListener);
+        }
     }
 }
