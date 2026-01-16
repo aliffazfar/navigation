@@ -1,19 +1,15 @@
 package com.navigation.reactnative;
 
-import android.graphics.Color;
-
 import androidx.transition.Transition;
-
-import com.google.android.material.transition.MaterialContainerTransform;
 
 import java.util.HashSet;
 
-class SharedElementMotion {
+public class SharedElementMotion {
     private final SceneFragment enterScene;
     private final SceneFragment scene;
-    private HashSet<String> sharedElements;
-    private HashSet<String> loadedSharedElements = new HashSet<>();
-    private boolean containerTransform = false;
+    private final HashSet<String> sharedElements;
+    private final HashSet<String> loadedSharedElements = new HashSet<>();
+    private final boolean containerTransform;
 
     SharedElementMotion(SceneFragment enterScene, SceneFragment scene, HashSet<String> sharedElements, boolean containerTransform) {
         this.sharedElements = sharedElements;

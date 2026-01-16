@@ -7,10 +7,11 @@ import android.view.WindowInsets;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
-import androidx.transition.Transition;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcher;
@@ -28,11 +29,13 @@ public class SceneView extends ReactViewGroup {
     protected String exitAnim;
     protected AnimationPropParser.Animator enterAnimator;
     protected AnimationPropParser.Animator exitAnimator;
-    protected Transition enterTrans;
-    protected Transition exitTrans;
+    protected ReadableMap enterTrans;
+    protected ReadableMap exitTrans;
+    protected ReadableArray sharedElementNames;
     private boolean landscape;
     public final HashSet<SharedElementView> sharedElements = new HashSet<>();
-    SharedElementMotion sharedElementMotion;
+    protected SharedElementMotion sharedElementMotion;
+    protected boolean containerTransform;
     private WeakReference<Toolbar> toolbar;
     private WeakReference<DrawerLayoutView> drawer;
     private final HashSet<WindowInsetsListener> windowInsetsListeners = new HashSet<>();
