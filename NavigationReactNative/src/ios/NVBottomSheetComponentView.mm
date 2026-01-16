@@ -238,7 +238,7 @@ API_AVAILABLE(ios(15.0)){
 
 - (UIView *)sharedElementView
 {
-    if (!_sharedElement) return nil;
+    if (!_sharedElement.length) return nil;
     NSSet *sharedElements = ((UIViewController<NVSharedElementController> *) self.reactViewController).sharedElements;
     for (UIView<NVSharedElement> *sharedElementView in sharedElements) {
         if ([sharedElementView.name isEqual:self->_sharedElement])
