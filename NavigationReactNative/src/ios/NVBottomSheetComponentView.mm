@@ -215,19 +215,21 @@ API_AVAILABLE(ios(15.0)){
         UIView *sharedElementView = [self sharedElementView];
         if (sharedElementView) {
             if ([sharedElementView isKindOfClass:[NVBarButtonComponentView class]]) {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
                 if (@available(iOS 26.0, *)) {
-                    SEL selector = NSSelectorFromString(@"zoomWithOptions:sourceBarButtonItemProvider:");
-                    [_bottomSheetController setValue:[(id)NSClassFromString(@"UIViewControllerTransition") performSelector:selector withObject:nil withObject:^id (id context) {
+                    [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceBarButtonItemProvider:^id (UIZoomTransitionSourceViewProviderContext *context) {
                         return ((NVBarButtonComponentView *) sharedElementView).button;
-                    }] forKey:@"preferredTransition"];
+                    }]];
                 }
+#endif
             } else {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 180000
                 if (@available(iOS 18.0, *)) {
-                    SEL selector = NSSelectorFromString(@"zoomWithOptions:sourceViewProvider:");
-                    [_bottomSheetController setValue:[(id)NSClassFromString(@"UIViewControllerTransition") performSelector:selector withObject:nil withObject:^id (id context) {
+                    [_bottomSheetController setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^id (UIZoomTransitionSourceViewProviderContext *context) {
                         return sharedElementView;
-                    }] forKey:@"preferredTransition"];
+                    }]];
                 }
+#endif
             }
         }
         [[self reactViewController] presentViewController:_bottomSheetController animated:true completion:nil];

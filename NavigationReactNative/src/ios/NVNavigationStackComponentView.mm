@@ -116,11 +116,12 @@ using namespace facebook::react;
             _navigationController.delegate = _stackControllerDelegate;
             _navigationController.interactivePopGestureRecognizer.delegate = self;
             [_navigationController.view addGestureRecognizer:_interactiveGestureRecognizer];
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
             if (@available(iOS 26.0, *)) {
-                UIGestureRecognizer *contentGesture = [_navigationController valueForKey:@"interactiveContentPopGestureRecognizer"];
-                contentGesture.delegate = self;
+                _navigationController.interactiveContentPopGestureRecognizer.delegate = self;
                 [_navigationController.view addGestureRecognizer:_interactiveContentGestureRecognizer];
             }
+#endif
         }
     } else {
         if (_navigationController.interactivePopGestureRecognizer.delegate == self) {
@@ -129,10 +130,11 @@ using namespace facebook::react;
             [_navigationController.view removeGestureRecognizer:_interactiveGestureRecognizer];
             [_navigationController.view removeGestureRecognizer:_interactiveContentGestureRecognizer];
             _navigationController.interactivePopGestureRecognizer.delegate = _interactiveGestureRecognizerDelegate;
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
             if (@available(iOS 26.0, *)) {
-                UIGestureRecognizer *contentGesture = [_navigationController valueForKey:@"interactiveContentPopGestureRecognizer"];
-                contentGesture.delegate = _interactiveGestureRecognizerDelegate;
+                _navigationController.interactiveContentPopGestureRecognizer.delegate = _interactiveGestureRecognizerDelegate;
             }
+#endif
         }
     }
     _navigationController.view.backgroundColor = RCTUIColorFromSharedColor(newViewProps.underlayColor);
@@ -191,12 +193,13 @@ using namespace facebook::react;
             if (!prevSceneController)
                 prevSceneController = (NVSceneController *) _navigationController.topViewController;
             if (crumb - currentCrumb == 1 && [self sharedElementView:prevSceneController]) {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 180000
                 if (@available(iOS 18.0, *)) {
-                    SEL selector = NSSelectorFromString(@"zoomWithOptions:sourceViewProvider:");
-                    [controller setValue:[(id)NSClassFromString(@"UIViewControllerTransition") performSelector:selector withObject:nil withObject:^id (id context) {
+                    [controller setPreferredTransition:[UIViewControllerTransition zoomWithOptions:nil sourceViewProvider:^id (UIZoomTransitionSourceViewProviderContext *context) {
                         return [self sharedElementView:prevSceneController];
-                    }] forKey:@"preferredTransition"];
+                    }]];
                 }
+#endif
             }
             prevSceneController.exitTrans = _exitTransitions;
             prevSceneController.popEnterTrans = scene.enterTrans;
@@ -370,18 +373,19 @@ using namespace facebook::react;
     NVSceneController *previousSceneController = (NVSceneController *) _navigationController.viewControllers[_navigationController.viewControllers.count - 2];
     if (previousSceneController.view.subviews.count == 0) return NO;
     if (((NVSceneController *) _navigationController.topViewController).popExitTrans.count > 0) {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
         if (@available(iOS 26.0, *)) {
             return gestureRecognizer == _interactiveGestureRecognizer || gestureRecognizer == _interactiveContentGestureRecognizer;
-        } else {
-            return gestureRecognizer == _interactiveGestureRecognizer;
         }
+#endif
+        return gestureRecognizer == _interactiveGestureRecognizer;
     }
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
     if (@available(iOS 26.0, *)) {
-        UIGestureRecognizer *systemContentGesture = [_navigationController valueForKey:@"interactiveContentPopGestureRecognizer"];
-        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer || gestureRecognizer == systemContentGesture;
-    } else {
-        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer;
+        return gestureRecognizer == _navigationController.interactivePopGestureRecognizer || gestureRecognizer == _navigationController.interactiveContentPopGestureRecognizer;
     }
+#endif
+    return gestureRecognizer == _navigationController.interactivePopGestureRecognizer;
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldBeRequiredToFailByGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
